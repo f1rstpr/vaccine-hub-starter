@@ -1,5 +1,7 @@
 const db = require("../db");
+const bcrypt = require("bcrypt");
 const { BadRequestError, UnauthorizedError } = require("../utils/errors");
+const { BCRYPT_WORK_FACTOR } = require("../config");
 
 class User {
     static async login(credentials) {
@@ -34,6 +36,11 @@ class User {
 
         const lowercasedEmail = credentials.email.toLowerCase();
 
+        const hashedPassword = await bcrypt.hash(
+            credentials.password,
+            BCRYPT_WORK_FACTOR
+        );
+
         const result = await db.query(
             `
             INSERT INTO USERS (
@@ -42,7 +49,7 @@ class User {
             RETURNING id, password, first_name, last_name, email, location, date
             `,
             [
-                credentials.password,
+                hashedPassword,
                 credentials.first_name,
                 credentials.last_name,
                 lowercasedEmail,

@@ -18,6 +18,8 @@ function getDatabaseUri() {
     );
 }
 
+const BCRYPT_WORK_FACTOR = 10;
+
 // console.log("process.env", Object.keys(process.env));
 console.log("App Config");
 console.log("PORT:", PORT);
@@ -26,4 +28,5 @@ console.log("---");
 module.exports = {
     PORT,
     getDatabaseUri,
+    BCRYPT_WORK_FACTOR,
 };
