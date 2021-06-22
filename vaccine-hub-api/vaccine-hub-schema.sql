@@ -4,8 +4,9 @@ CREATE TABLE users (
     first_name TEXT NOT NULL,
     last_name  TEXT NOT NULL,
     email      TEXT NOT NULL UNIQUE CHECK (POSITION('@' IN email) > 1),
+    -- email      VARCHAR NOT NULL UNIQUE,
     location   TEXT NOT NULL,
-    DATE       TIMESTAMP NOT NULL DEFAULT NOW()
+    date       TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 

@@ -1,5 +1,5 @@
 const db = require("../db");
-const { UnauthorizedError } = require("../utils/errors");
+const { BadRequestError, UnauthorizedError } = require("../utils/errors");
 
 class User {
     static async login(credentials) {
@@ -7,15 +7,67 @@ class User {
     }
 
     static async register(credentials) {
-        // submit info
+        const requiredFields = [
+            "password",
+            "first_name",
+            "last_name",
+            "email",
+            "location",
+            "date",
+        ];
 
-        // throw error if one of the info is missing or email alrdy exist
+        requiredFields.forEach((field) => {
+            if (!credentials.hasOwnProperty(field)) {
+                throw new BadRequestError(`missing ${field} in request.body`);
+            }
+        });
 
-        // hash pw
+        if (credentials.email.indexOf("@") <= 0) {
+            throw new BadRequestError(`invalid email`);
+        }
 
-        // create new user in db
+        const existingUser = await User.fetchUserByEmail(credentials.email);
 
-        throw new UnauthorizedError("");
+        if (existingUser) {
+            throw new BadRequestError(`duplicate email: ${credentials.email}`);
+        }
+
+        const lowercasedEmail = credentials.email.toLowerCase();
+
+        const result = await db.query(
+            `
+            INSERT INTO USERS (
+                password, first_name, last_name, email, location, date)
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id, password, first_name, last_name, email, location, date
+            `,
+            [
+                credentials.password,
+                credentials.first_name,
+                credentials.last_name,
+                lowercasedEmail,
+                credentials.location,
+                credentials.date,
+            ]
+        );
+
+        const user = result.rows[0];
+
+        return user;
+    }
+
+    static async fetchUserByEmail(email) {
+        if (!email) {
+            throw new BadRequestError("no email provided");
+        }
+
+        const query = "SELECT * FROM users WHERE email = $1";
+
+        const result = await db.query(query, [email.toLowerCase()]);
+
+        const user = result.rows[0];
+
+        return user;
     }
 }
 
